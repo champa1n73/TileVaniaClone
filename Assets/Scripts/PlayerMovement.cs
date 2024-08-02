@@ -10,40 +10,66 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float runSpeed = 10f;
     [SerializeField] private float jumpSpeed = 10f;
     [SerializeField] private float climbSpeed = 10f;
+    [SerializeField] private Vector2 deathkick = new Vector2(10f, 10f);
+    [SerializeField] private GameObject bullet;
+    [SerializeField] private Transform gun;
     private bool isTryingToClimb;
+    private bool isAlive = true;
+    private float gravityScaleAtStart;
     private Vector2 moveInput;
+    
     
     private Rigidbody2D myRigidbody;
     private Animator myAnimator;
-    private CapsuleCollider2D myCapsuleCollider;
-    private float gravityScaleAtStart;
+    private CapsuleCollider2D myBodyCollider;
+    private BoxCollider2D myFeetCollider;
     private void Start()
     {
         myRigidbody = GetComponent<Rigidbody2D>();
         myAnimator = GetComponent<Animator>();
-        myCapsuleCollider = GetComponent<CapsuleCollider2D>();
+        myBodyCollider = GetComponent<CapsuleCollider2D>();
+        myFeetCollider = GetComponent<BoxCollider2D>();
         gravityScaleAtStart = myRigidbody.gravityScale;
     }
 
     private void Update()
     {
-        Run();
-        FlipSrpite();
-        ClimbLadder();
+        if(isAlive)
+        {
+            Run();
+            FlipSrpite();
+            ClimbLadder();
+            Die();
+        }
     }
 
     private void OnMove(InputValue value)
     {
-        moveInput = value.Get<Vector2>();
+        if(isAlive)
+        {
+            moveInput = value.Get<Vector2>();
+        }
     }
 
     private void OnJump(InputValue value)
     {
-        if (value.isPressed && (IsOnGround() || IsOnLadder() ))
+        if(isAlive)
         {
-            isTryingToClimb = false;
-            myRigidbody.velocity = new Vector2(myRigidbody.velocity.x, jumpSpeed);     
+            if (value.isPressed && (IsOnGround() || IsOnLadder() && isTryingToClimb == true))
+            {
+                isTryingToClimb = false;
+                myRigidbody.velocity = new Vector2(myRigidbody.velocity.x, jumpSpeed);
+            }
         }
+    }
+
+    private void OnFire(InputValue value)
+    {
+        if (isAlive)
+        {
+            Instantiate(bullet, gun.position, transform.rotation);
+        }
+
     }
 
     private void Run()
@@ -101,11 +127,24 @@ public class PlayerMovement : MonoBehaviour
 
     private bool IsOnGround()
     {
-        return myCapsuleCollider.IsTouchingLayers(LayerMask.GetMask("Ground"));
+        return myFeetCollider.IsTouchingLayers(LayerMask.GetMask("Ground"));
     }
 
     private bool IsOnLadder()
     {
-        return myCapsuleCollider.IsTouchingLayers(LayerMask.GetMask("Ladder"));
+        return myFeetCollider.IsTouchingLayers(LayerMask.GetMask("Ladder"));
     }
+
+    private void Die()
+    {
+        if(myBodyCollider.IsTouchingLayers(LayerMask.GetMask("Enemies", "Hazards")))
+        {
+            isAlive = false;
+            myAnimator.SetTrigger("Dying");
+            myRigidbody.velocity = deathkick;
+            FindAnyObjectByType<GameSession>().ProcessPlayerDeath();
+        }
+    }
+
+
 }
