@@ -67,15 +67,21 @@ public class PlayerMovement : MonoBehaviour
     {
         if (isAlive)
         {
-            Instantiate(bullet, gun.position, transform.rotation);
+            myAnimator.SetTrigger("Shooting");
+            Instantiate(bullet, gun.position, transform.rotation);  
         }
 
     }
 
     private void Run()
     {
+        if (myAnimator.GetCurrentAnimatorStateInfo(0).IsName("Shooting") && IsOnGround())
+        {
+            myRigidbody.velocity = new Vector2(0f, myRigidbody.velocity.y);
+            return;
+        }
         myRigidbody.velocity = new Vector2(moveInput.x * runSpeed, myRigidbody.velocity.y);
-        if(MathF.Abs(moveInput.x) > Mathf.Epsilon && !IsOnLadder())
+        if (MathF.Abs(moveInput.x) > Mathf.Epsilon && !IsOnLadder())
         {
             isTryingToClimb = false;
         }

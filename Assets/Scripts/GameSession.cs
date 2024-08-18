@@ -15,9 +15,8 @@ public class GameSession : MonoBehaviour
 
     private void Awake()
     {
-        if(instance != null)
+        if (instance != null)
         {
-            Debug.Log("Hello");
             Destroy(gameObject);
             return;
         }
@@ -54,15 +53,16 @@ public class GameSession : MonoBehaviour
         livesText.text = playerLives.ToString();
     }
 
-    private void ResetGameSession()
-    {
-        SceneManager.LoadScene(0);
-        Destroy(gameObject);
-    }
-
     public void AddToScore(int pointsToAdd)
     {
         score += pointsToAdd;
         scoreText.text = score.ToString();
+    }
+
+    private void ResetGameSession()
+    {
+        FindObjectOfType<ScenePersist>().ResetScenePersist();
+        SceneManager.LoadScene(0);
+        Destroy(gameObject);
     }
 }
